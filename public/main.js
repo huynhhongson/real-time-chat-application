@@ -15,7 +15,10 @@ socket.on('client-total', (data) => {
 })
 
 function sendMessage(){
-    console.log(messageInput.value)
+    if(messageInput.value === ''){
+        return
+    }
+    // console.log(messageInput.value)
     const data = {
         
         message: messageInput.value,
@@ -33,6 +36,7 @@ socket.on('chat-message', (data)=>{
 })
 
 function addMessageToUI(isOwnMessage, data){
+    clearFeedback()
     const element = `<li class="${isOwnMessage ? "message-right" : "message-left"}">
                     <p class="message">
                         ${data.message}
@@ -40,4 +44,45 @@ function addMessageToUI(isOwnMessage, data){
                     </p>
                 </li>`
     messageContainer.innerHTML += element
+    scrollBottom()
+}
+
+function scrollBottom(){
+    messageContainer.scrollTo(0, messageContainer.scrollHeight)
+}
+
+messageInput.addEventListener('focus', (e) =>{
+    socket.emit('feedback', {
+        feedback: `${nameInput.value} is typing a message`
+    })
+})
+
+messageInput.addEventListener('keypress', (e) =>{
+    socket.emit('feedback', {
+        feedback: `${nameInput.value} is typing a message`
+    })
+})
+
+messageInput.addEventListener('blur', (e) =>{
+    socket.emit('feedback', {
+        feedback: ''
+    })
+})
+
+socket.on('feedback', (data) =>{
+    clearFeedback()
+    const element = `
+                <li class="message-feedback">
+                    <p class="feedback" id="feddback">
+                        ${data.feedback}
+                    </p>
+                </li>
+    `
+    messageContainer.innerHTML += element
+})
+
+function clearFeedback(){
+    document.querySelectorAll('li.message-feedback').forEach(element =>{
+        element.parentNode.removeChild(element)
+    })
 }
